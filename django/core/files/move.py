@@ -75,7 +75,15 @@ def file_move_safe(old_file_name, new_file_name, chunk_size=1024 * 64, allow_ove
         # Certain filesystems (e.g. CIFS) fail to copy the file's metadata if
         # the type of the destination filesystem isn't the same as the source
         # filesystem; ignore that.
-        if getattr(e, 'errno', 0) != errno.EPERM:
+
+        # This patch makes this function work again in a SELinux
+        # enabled system.
+        # For reference:
+        #   https://code.djangoproject.com/ticket/29027
+        #   https://code.djangoproject.com/ticket/28170
+        #   https://github.com/agrimgt/django/commit/f9b48086d083b1eee800ea752f2c3fd60a8cc448
+        #   https://github.com/django/django/pull/8486
+        if getattr(e, 'errno', 0) not in [errno.EPERM, errno.EACCES]:
             raise
 
     try:
